@@ -4,9 +4,17 @@ import { database } from './config/database';
 import { StatusMonitorModule } from 'nest-status-monitor';
 import statusMonitorConfig from './config/statusMonitor';
 import { CommonModule } from './common/common.module';
+import { LoginModule } from './module/login.module';
+import { UserModule } from './module/user.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './common/guards/auth.guard';
 
 @Module({
   imports: [
+    // 用户
+    UserModule,
+    // 登陆
+    LoginModule,
     // 中间件
     CommonModule,
     // 异常监控
@@ -15,7 +23,13 @@ import { CommonModule } from './common/common.module';
     CoreModule.forRoot(database()),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    // 守卫token验证
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {
   // 全局中间件

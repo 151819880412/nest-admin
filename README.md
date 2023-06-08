@@ -10,3 +10,5 @@
   7. npm install --save @nestjs/passport passport passport-local  身份认证
   7. npm install --save-dev @types/passport-local  身份认证
   10. npm install ioredis       redis
+# 数据库
+  1. https://blog.csdn.net/qq_41579327/article/details/122874449

@@ -24,4 +24,9 @@ export class UserEntity extends BaseEntity {
   @IsNotEmpty({ message: 'username不能为空' })
   @IsString({ message: '参数username要求是字符串!' })
   username: string;
+
+  @Column('varchar', { length: 20 })
+  @IsNotEmpty({ message: 'username不能为空' })
+  @IsString({ message: '参数username要求是字符串!' })
+  password: string;
 }
