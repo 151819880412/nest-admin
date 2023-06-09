@@ -10,7 +10,6 @@ export class UserServiceImpl implements UserService {
     pageSize: number,
     user: UserPageDto,
   ): Promise<Res<any>> {
-    console.log(user);
     return new Promise((res) => {
       setTimeout(() => {
         res(R.ok('111'));

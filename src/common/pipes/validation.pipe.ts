@@ -23,15 +23,13 @@ export class ValidationPipes implements PipeTransform {
     }
     // 将对象转换为 Class 来验证
     const object = plainToClass(metatype, value);
-    console.log(object, value);
     const errors = await validate(object);
     if (errors.length > 0) {
       const errorArr = [];
       Object.values(errors).forEach((item) => {
         errorArr.push(item.constraints);
       });
-      const msg = Object.values(errors[0].constraints)[0]; // 只需要取第一个错误信息并返回即可
-      console.log(msg);
+      // const msg = Object.values(errors[0].constraints)[0]; // 只需要取第一个错误信息并返回即可
       // Logger.error(`Validation failed: ${msg}`);
       // throw new BadRequestException(`Validation failed: ${msg}`);
       throw new BadRequestException(errorArr);

@@ -18,8 +18,6 @@
 //     //   exception instanceof HttpException
 //     //     ? exception.getStatus()
 //     //     : HttpStatus.INTERNAL_SERVER_ERROR;
-//     console.log(exception);
-//     console.log(exception.message);
 //     const badMessage = exception.message;
 //     let validatorMessage;
 //     let status = 200;
@@ -45,7 +43,6 @@
 //         type: 'error',
 //       });
 //     } else {
-//       console.log(exception, 11111);
 //       response.status(status).json({
 //         code: 50000,
 //         timestamp: Formt('yyyy-MM-dd HH:mm:ss'),
@@ -75,7 +72,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    console.log(exception, 111);
+    console.log('异常拦截', exception);
     // const status = exception.getStatus
     //   ? exception.getStatus()
     //   : HttpStatus.INTERNAL_SERVER_ERROR;
