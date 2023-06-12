@@ -26,14 +26,14 @@ export class JwtAuthGuard implements CanActivate {
     }
     const request = context.switchToHttp().getRequest<Request>();
     // 获取请求头里的 token
-    const token: string = request['headers'].authorization as string;
+    const token: string = request['headers'].authorization.substring(
+      'Bearer '.length,
+    ) as string;
 
     if (token) {
       try {
         // 获取 redis 里缓存的 token
-        const user: UserEntity = new JwtService().decode(
-          token.substring('Bearer '.length),
-        ) as UserEntity;
+        const user: UserEntity = new JwtService().decode(token) as UserEntity;
         const key = `${user.id}-${user.username}`;
         const redis_token = await RedisInstance.getRedis(
           'auth.certificate',
