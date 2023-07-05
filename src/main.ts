@@ -4,9 +4,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationPipes } from './common/pipes/validation.pipe';
 import { WarpResponseInterceptor } from './common/interceptors/warp-response.interceptor';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // 全局注册 管道 -- 参数过滤器
   app.useGlobalPipes(new ValidationPipes());
