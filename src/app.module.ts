@@ -8,6 +8,7 @@ import { LoginModule } from './module/login.module';
 import { UserModule } from './module/user.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/auth.guard';
+import { FileModule } from './module/file.module';
 
 @Module({
   imports: [
@@ -15,6 +16,8 @@ import { JwtAuthGuard } from './common/guards/auth.guard';
     UserModule,
     // 登陆
     LoginModule,
+    // 文件
+    FileModule,
     // 中间件
     CommonModule,
     // 异常监控
