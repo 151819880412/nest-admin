@@ -26,7 +26,7 @@ export class JwtAuthGuard implements CanActivate {
     }
     const request = context.switchToHttp().getRequest<Request>();
     // 获取请求头里的 token
-    const token: string = request['headers'].authorization.substring(
+    const token: string = request['headers']?.authorization?.substring(
       'Bearer '.length,
     ) as string;
 

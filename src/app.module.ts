@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { CoreModule } from './config/core';
 import { database } from './config/database';
 import { StatusMonitorModule } from 'nest-status-monitor';
+import { ConfigModule } from '@nestjs/config';
 import statusMonitorConfig from './config/statusMonitor';
 import { CommonModule } from './common/common.module';
 import { LoginModule } from './module/login.module';
@@ -9,6 +10,8 @@ import { UserModule } from './module/user.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/auth.guard';
 import { FileModule } from './module/file.module';
+import appConfig from './config/app.config';
+import { AuthModule } from './module/auth.module';
 
 @Module({
   imports: [
@@ -22,6 +25,12 @@ import { FileModule } from './module/file.module';
     CommonModule,
     // 异常监控
     StatusMonitorModule.setUp(statusMonitorConfig),
+    // 权限
+    AuthModule,
+    // 全局配置
+    ConfigModule.forRoot({
+      load: [appConfig],
+    }),
     // 数据库连接
     CoreModule.forRoot(database()),
   ],
