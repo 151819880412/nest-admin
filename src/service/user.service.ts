@@ -3,4 +3,5 @@ import { Res } from '../response/R';
 
 export interface UserService {
   page(currentPage: number, pageSize: number, user: UserPageDto): Promise<Res>;
+  addUser(user: UserPageDto): Promise<Res>;
 }

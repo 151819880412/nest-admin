@@ -6,7 +6,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { UserPageDto } from 'src/pojo/dto/user.dto';
+import { UserDto, UserPageDto } from 'src/pojo/dto/user.dto';
 import { Res } from 'src/response/R';
 import { UserServiceImpl } from 'src/service/impl/user.service.impl';
 
@@ -42,5 +42,10 @@ export class UserController {
     @Param('pageSize') pageSize: number,
   ): Promise<Res> {
     return this.userService.page(currentPage, pageSize, userPageDto);
+  }
+
+  @Post('add')
+  addUser(@Body() user: UserDto): Promise<Res> {
+    return this.userService.addUser(user);
   }
 }
