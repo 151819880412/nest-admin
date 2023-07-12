@@ -20,12 +20,20 @@ export const database: () => TypeOrmModuleOptions = () => ({
   // 实体每次运行程序时都会和数据库同步。生产中需要关闭
   // synchronize: process.env.NODE_ENV !== 'production',
 
-  type: 'mysql',
+  // type: 'mysql',
+  // host: 'localhost',
+  // port: 3308,
+  // username: 'root',
+  // password: '123456',
+  // database: 'mysql-nest',
+  // synchronize: true,
+
+  type: 'postgres',
   host: 'localhost',
-  port: 3308,
-  username: 'root',
-  password: '123456',
-  database: 'mysql-nest',
+  port: 5432,
+  username: 'postgres',
+  password: 'pass123',
+  database: 'nest-admin',
   synchronize: true,
 
   // 自动加载模块
