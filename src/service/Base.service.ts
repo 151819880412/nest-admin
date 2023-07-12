@@ -8,6 +8,8 @@ import {
   FindOneOptions,
 } from 'typeorm';
 import { Injectable } from '@nestjs/common';
+import { fuzzyquery } from 'src/utils/Fuzzyquery';
+import { R, Res } from 'src/response/R';
 
 @Injectable()
 /**
@@ -20,6 +22,35 @@ import { Injectable } from '@nestjs/common';
  */
 export class BaseService<T> {
   constructor(protected readonly repository: Repository<T>) {}
+
+  /**
+   * 分页查询
+   * @author
+   * @date 2023-07-12
+   * @param {any} currentPage:number
+   * @param {any} pageSize:number
+   * @param {any} data:T|{}
+   * @param {any} selectCondition:Array<string>=null
+   * @returns {any}
+   */
+  async findPage<T>(
+    currentPage: number,
+    pageSize: number,
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    data: T | {},
+    selectCondition: Array<string> = null,
+  ): Promise<Res<T>> {
+    const result = await this.repository
+      .createQueryBuilder('entity')
+      .where(fuzzyquery(data))
+      .orderBy(`entity.createdTime`, 'DESC')
+      .skip(pageSize * (currentPage - 1))
+      .take(pageSize)
+      .select(selectCondition)
+      .getManyAndCount();
+    console.log(result);
+    return R.ok('成功', { total: result[1], results: result[0] });
+  }
 
   async saveOne(entity: T, options?: SaveOptions): Promise<T> {
     return this.repository.save(entity, options);
