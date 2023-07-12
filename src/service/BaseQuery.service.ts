@@ -139,7 +139,7 @@ export class BaseQueryBuilderService<E> {
     const data = await this.dataSource
       .getRepository(entity || this.entity)
       .createQueryBuilder(dataSourceStr || this.dataSourceStr)
-      .where(Object.assign({}, { delFlag: 0 }, where))
+      .where(Object.assign({}, { delFlag: 1 }, where))
       .getMany();
     return data;
   }

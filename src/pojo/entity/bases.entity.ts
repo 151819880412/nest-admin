@@ -11,12 +11,12 @@ export abstract class BasesEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // 0 未删除 1 删除
-  @Column('int', { default: 0, name: 'del_flag' })
+  // 0--删除 1--未删除
+  @Column('int', { default: 1, name: 'del_flag' })
   delFlag: number;
 
-  // 0 启用 1 禁用
-  @Column('int', { default: 0 })
+  // 0--禁用 1--启用
+  @Column('int', { default: 1 })
   state: number;
 
   @CreateDateColumn({
