@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-// import { randomUUID } from 'crypto';
-import { diskStorage } from 'multer';
 import { FileController } from 'src/controller/file.controller';
 import { FileService } from 'src/service/impl/file.service.impl';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { FileEntity } from 'src/pojo/entity/file.entity';
+import { ConfigModule } from '@nestjs/config';
+
 @Module({
   imports: [
-    MulterModule.registerAsync({
-      useClass: FileService,
-    }),
+    TypeOrmModule.forFeature([FileEntity]),
+    // MulterModule.registerAsync({
+    //   useClass: FileService,
+    // }),
     // MulterModule.register({
     //   storage: diskStorage({
     //     //自定义路径
