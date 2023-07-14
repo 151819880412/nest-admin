@@ -7,9 +7,12 @@ import {
 import * as multer from 'multer';
 import { Formt } from 'src/utils/DateFormt';
 import { FileEntity } from 'src/pojo/entity/file.entity';
-import { R } from 'src/response/R';
+import { R, Res } from 'src/response/R';
 import { BaseService } from '../Base.service';
 import { InjectRepository } from '@nestjs/typeorm';
+import { MulterFile } from 'multer';
+import { ASTElement } from 'vue-template-compiler';
+import { SFCDescriptor } from '@vue/compiler-sfc';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs'); // 文件系统模块，用于读写文件
@@ -33,40 +36,51 @@ export class FileService
     super(fileEntityRepository);
   }
 
-  async uploadFile(file) {
+  async uploadFile(file: MulterFile): Promise<Res> {
+    // 当前时间 :转-
+    const currentTime = Formt('yyyy-MM-dd HH:mm:ss').replace(/:/g, '-');
+    // 当前日期
+    const currentDate = Formt('yyyy-MM-dd');
+    // 最终文件名
+    const fileName = currentTime + '-' + file.originalname;
+
     // 查询数据库，检查是否存在相同文件名的文件
     const existingFile = await this.findOne({
       where: {
-        fileName: file.originalname,
+        originalName: file.originalname,
       },
     });
-
     if (existingFile) {
       // 保存文件信息到数据库
-      this.updateBy(
+      await this.updateBy(
         {
           where: {
-            fileName: file.originalname,
+            originalName: file.originalname,
           },
         },
         {
-          fileName: file.originalname,
+          fileName: fileName,
+          originalName: file.originalname,
           version: +existingFile.version * 1 + 1 + '',
         } as FileEntity,
       );
     } else {
       // 保存文件信息到数据库
-      this.saveOne({
-        fileName: file.originalname,
+      await this.saveOne({
+        fileName: fileName,
+        originalName: file.originalname,
         version: '1',
       } as FileEntity);
     }
     // 将文件保存到指定目录
     // 这里使用 fs 模块进行保存，也可以使用其他方式
-    const currentTime = Formt('yyyy-MM-dd HH:mm:ss').replace(/:/g, '-');
-    const currentDate = Formt('yyyy-MM-dd');
-    const filrNanme = currentTime + '-' + file.originalname;
-    const filePath = `./fileUpload/${currentDate}/${filrNanme}`;
+    const filePath = `./fileUpload/${currentDate}/${fileName}`;
+    // 检查目录是否存在，如果不存在则创建
+    if (!fs.existsSync(`./fileUpload/${currentDate}`)) {
+      fs.mkdirSync(`./fileUpload/${currentDate}`, { recursive: true });
+    }
+
+    // 将文件写入指定路径
     fs.writeFileSync(filePath, file.buffer);
     // 解析vue文件
     if (
@@ -80,39 +94,27 @@ export class FileService
     return R.ok('文件保存成功!');
   }
 
-  createMulterOptions(): MulterModuleOptions {
-    try {
-      return {
-        storage: multer.diskStorage({
-          //自定义路径
-          destination: `./fileUpload/${Formt('yyyy-MM-dd')}`,
-          filename: (req, file, cb) => {
-            // 自定义文件名
-            const filename = Buffer.from(file.originalname, 'latin1').toString(
-              'utf8',
-            );
-            return cb(null, filename);
-          },
-        }),
-      };
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  vueToJs(filePath: string, outPath: string) {
-    const vueFilePath = path.resolve(filePath); // 解析.vue文件路径
+  /**
+   * vue文件转js文件
+   * @author
+   * @date 2023-07-14
+   * @param {any} filePath:string
+   * @param {any} outPath:string
+   * @returns {any}
+   */
+  vueToJs(filePath: string, outPath: string): void {
+    const vueFilePath: string = path.resolve(filePath); // 解析.vue文件路径
     const vueFileContent = fs.readFileSync(vueFilePath, 'utf-8'); // 读取.vue文件内容
-    const { template, script, styles } =
+    const { template, script, styles }: SFCDescriptor =
       compiler.parseComponent(vueFileContent); // 解析.vue文件的内容
 
-    const id = Date.now().toString(); // 生成唯一的ID
+    const id: string = Date.now().toString(); // 生成唯一的ID
     const scopeId = `data-v-${id}`; // 生成唯一的scopeId，用于CSS作用域
 
     const compilerOptions = {
       modules: [
         {
-          preTransformNode: (el) => {
+          preTransformNode: (el: ASTElement) => {
             // 在这里可以修改元素的属性，添加唯一标识
             el.attrsMap[scopeId] = '';
             el.attrsList.push({ name: scopeId, value: '' });
@@ -164,7 +166,7 @@ export class FileService
       external: ['vue'], // 将Vue标记为外部依赖
     })
       .then(() => {
-        let bundleContent = fs.readFileSync('bundle.js', 'utf8'); // 读取生成的bundle1.js文件的内容
+        let bundleContent = fs.readFileSync(outPath + '.js', 'utf8'); // 读取生成的bundle1.js文件的内容
         const insertStr = '  return __sfc_main__;\n'; // 要插入的字符串
         const position = bundleContent.length - 6; // 要插入的位置
 
@@ -175,9 +177,33 @@ export class FileService
 
         fs.writeFileSync(outPath + '.js', bundleContent, 'utf8'); // 重新写入修改后的内容
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error(err); // 如果打包出错，输出错误信息
         process.exit(1);
       });
+  }
+
+  createMulterOptions(): MulterModuleOptions {
+    try {
+      return {
+        storage: multer.diskStorage({
+          //自定义路径
+          destination: `./fileUpload/${Formt('yyyy-MM-dd')}`,
+          filename: (
+            req: Express.Request,
+            file: MulterFile,
+            cb: (error: Error | null, filename: string) => void,
+          ) => {
+            // 自定义文件名
+            const filename = Buffer.from(file.originalname, 'latin1').toString(
+              'utf8',
+            );
+            return cb(null, filename);
+          },
+        }),
+      };
+    } catch (error) {
+      console.error(error);
+    }
   }
 }

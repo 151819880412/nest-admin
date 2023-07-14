@@ -5,7 +5,6 @@ import {
   UploadedFile,
   UseInterceptors,
   Res as Resp,
-  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
@@ -14,8 +13,7 @@ import { FileService } from 'src/service/impl/file.service.impl';
 import { Get } from '@nestjs/common';
 import { join } from 'path';
 import { Response } from 'express';
-import * as multer from 'multer';
-import { Formt } from 'src/utils/DateFormt';
+import { MulterFile } from 'multer';
 
 import {
   Injectable,
@@ -55,15 +53,9 @@ export class FileController {
    * @param {any}
    * @returns {any}
    */
-  // @Post('upload')
-  // @UseInterceptors(FileInterceptor('file'))
-  // uploadFile(): Res {
-  //   return R.ok('上传成功');
-  // }
-
   @Post('upload')
   @UseInterceptors(FileInterceptor('file')) // 指定上传文件字段的名称，例如 'file'
-  async uploadFile(@UploadedFile() file): Promise<Res> {
+  async uploadFile(@UploadedFile() file: MulterFile): Promise<Res> {
     return await this.fileService.uploadFile(file);
   }
 

@@ -5,6 +5,11 @@ import { IsNotEmpty, IsString } from 'class-validator';
 @Entity({ name: 'file' })
 @Unique(['fileName'])
 export class FileEntity extends BasesEntity {
+  @Column('varchar', { length: 50, comment: '原始文件名' })
+  @IsNotEmpty({ message: 'originalName不能为空' })
+  @IsString({ message: '参数originalName要求是字符串!' })
+  originalName: string;
+
   @Column('varchar', { length: 50, comment: '文件名' })
   @IsNotEmpty({ message: 'fileName不能为空' })
   @IsString({ message: '参数fileName要求是字符串!' })
