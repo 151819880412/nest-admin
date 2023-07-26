@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { fuzzyquery } from 'src/utils/Fuzzyquery';
-import { R, Res } from 'src/response/R';
+import { Page } from 'src/response/R';
 
 @Injectable()
 /**
@@ -20,7 +20,7 @@ import { R, Res } from 'src/response/R';
  * @param {any} protectedreadonlyrepository:Repository<T>
  * @returns {any}
  */
-export class BaseService<T> {
+export class BaseServiceImpl<T> {
   constructor(protected readonly repository: Repository<T>) {}
 
   /**
@@ -33,14 +33,14 @@ export class BaseService<T> {
    * @param {any} selectCondition:Array<string>=null
    * @returns {any}
    */
-  async findPage<T>(
+  async findPag1e<E>(
     currentPage: number,
     pageSize: number,
     // eslint-disable-next-line @typescript-eslint/ban-types
-    data: T | {},
+    data: E | {},
     selectCondition: Array<string> = null,
-  ): Promise<Res<T>> {
-    const result = await this.repository
+  ): Promise<{ total: number; results: T[] }> {
+    const result: [T[], number] = await this.repository
       .createQueryBuilder('entity')
       .where(fuzzyquery(data))
       .orderBy(`entity.createdTime`, 'DESC')
@@ -48,8 +48,25 @@ export class BaseService<T> {
       .take(pageSize)
       .select(selectCondition)
       .getManyAndCount();
-    console.log(result);
-    return R.ok('成功', { total: result[1], results: result[0] });
+    return { total: result[1], results: result[0] };
+  }
+
+  async findPage(currrentPage = 1, pageSize = 10, data: any) {
+    const options = {
+      where: fuzzyquery(data),
+      order: {
+        createdTime: 'DESC',
+      },
+      take: pageSize,
+      skip: (currrentPage - 1) * pageSize,
+    } as unknown as FindManyOptions<T>;
+    const [result, totalCount]: [T[], number] =
+      await this.repository.findAndCount(options);
+    const res: Page = {
+      total: totalCount,
+      results: result,
+    };
+    return res;
   }
 
   async saveOne(entity: T, options?: SaveOptions): Promise<T> {
@@ -109,9 +126,8 @@ export class BaseService<T> {
 
   async findOneBy(
     condition: string,
-    data: string | number,
+    data: string | number | any,
   ): Promise<T | undefined> {
-    console.log(this);
     const obj: FindOneOptions = {
       where: {
         [condition]: data,

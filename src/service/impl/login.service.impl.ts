@@ -4,14 +4,14 @@ import { LoginDto } from 'src/pojo/dto/login.dto';
 import { R, Res } from 'src/response/R';
 import { JwtService } from '@nestjs/jwt';
 import { RedisInstance } from 'src/database/redis';
-import { BaseService } from '../Base.service';
+import { BaseServiceImpl } from './Base.service.impl';
 import { UserEntity } from 'src/pojo/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class LoginServiceImpl
-  extends BaseService<UserEntity>
+  extends BaseServiceImpl<UserEntity>
   implements LoginService
 {
   constructor(
@@ -25,10 +25,10 @@ export class LoginServiceImpl
     const payload = { ...user };
     // const data = await this.findOne({
     //   where: {
-    //     username: user.username,
+    //     userName: user.userName,
     //   },
     // });
-    const data = await this.findOneBy('username', user.username);
+    const data = await this.findOneBy('userName', user.userName);
     console.log(data);
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: '24h',
@@ -40,7 +40,7 @@ export class LoginServiceImpl
     const redis = await RedisInstance.initRedis('auth.certificate', 0);
     // 将用户信息和 token 存入 redis，并设置失效时间，语法：[key, seconds, value]
     await redis.setex(
-      `${user.id}-${user.username}`,
+      `${user.id}-${user.userName}`,
       60 * 60 * 24,
       `${accessToken}`,
     );

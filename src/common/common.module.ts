@@ -23,6 +23,6 @@ export class CommonModule implements NestModule {
       // 排除路径
       .exclude({ path: 'login', method: RequestMethod.GET })
       // 监听除了 login 以外的所有路径
-      .forRoutes({ path: '*', method: RequestMethod.POST });
+      .forRoutes('*');
   }
 }

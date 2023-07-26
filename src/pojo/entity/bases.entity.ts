@@ -3,12 +3,15 @@ import {
   Column,
   CreateDateColumn,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Formt, FormtToString } from 'src/utils/DateFormt';
+import { Expose } from 'class-transformer';
 
 export abstract class BasesEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
+  @Expose()
   id: string;
 
   // 0--删除 1--未删除
@@ -45,7 +48,7 @@ export abstract class BasesEntity extends BaseEntity {
   @ApiProperty()
   createdTime: Date;
 
-  @CreateDateColumn({
+  @UpdateDateColumn({
     type: 'timestamp',
     nullable: false,
     comment: '更新时间',
@@ -57,8 +60,9 @@ export abstract class BasesEntity extends BaseEntity {
         }
         if (n instanceof Date) {
           return FormtToString(n, 'yyyy-MM-dd HH:mm:ss');
+        } else {
+          return Formt('yyyy-MM-dd HH:mm:ss');
         }
-        return n;
       },
       from(n) {
         if (n instanceof Date) {

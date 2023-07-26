@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -7,8 +7,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UserDto, UserPageDto } from 'src/pojo/dto/user.dto';
-import { Res } from 'src/response/R';
+import { UserEntity } from 'src/pojo/entity/user.entity';
+import { Page, Res } from 'src/response/R';
 import { UserServiceImpl } from 'src/service/impl/user.service.impl';
+import { InsertResult } from 'typeorm';
 
 @ApiBearerAuth()
 @ApiTags('用户')
@@ -40,12 +42,22 @@ export class UserController {
     @Body() userPageDto: UserPageDto,
     @Param('currentPage') currentPage: number,
     @Param('pageSize') pageSize: number,
-  ): Promise<Res> {
+  ): Promise<Page> {
     return this.userService.page(currentPage, pageSize, userPageDto);
   }
 
   @Post('add')
-  addUser(@Body() user: UserDto): Promise<Res> {
+  addUser(@Body() user: UserDto): Promise<UserEntity> {
     return this.userService.addUser(user);
+  }
+
+  @Get('queryById/:id')
+  queryById(@Param('id') id: string): Promise<UserEntity> {
+    return this.userService.queryById(id);
+  }
+
+  @Put('update')
+  update(@Body() user: UserDto): Promise<UserEntity> {
+    return this.userService.updates(user);
   }
 }

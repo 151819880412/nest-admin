@@ -115,6 +115,9 @@ function getErrorCode(exception: HttpException): number {
   if (status === HttpStatus.BAD_REQUEST) {
     return 40001;
   }
+  if (status === HttpStatus.NOT_FOUND) {
+    return 40004;
+  }
   if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
     return 50001;
   }

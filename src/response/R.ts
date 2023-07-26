@@ -4,7 +4,10 @@ export interface ResponseInterFace {
   data: any;
   type: 'success' | 'error';
 }
-
+export interface Page {
+  total: number;
+  results: any[];
+}
 export class Res<T = any> implements ResponseInterFace {
   code: number;
   message: string;

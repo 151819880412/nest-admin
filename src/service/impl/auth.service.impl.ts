@@ -25,7 +25,7 @@ export class AuthServiceImpl implements AuthService {
     const redis = await RedisInstance.initRedis('auth.certificate', 0);
     // 将用户信息和 token 存入 redis，并设置失效时间，语法：[key, seconds, value]
     await redis.setex(
-      `${user.id}-${user.username}`,
+      `${user.id}-${user.userName}`,
       60 * 60 * 24,
       `${accessToken}`,
     );
@@ -38,7 +38,7 @@ export class AuthServiceImpl implements AuthService {
 
   async clearToken(user: UserEntity) {
     const redis = await RedisInstance.initRedis('auth.certificate', 0);
-    const key = `${user.id}-${user.username}`;
+    const key = `${user.id}-${user.userName}`;
     return redis.del(`${key}`);
   }
 }

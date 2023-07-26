@@ -23,6 +23,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
+import * as fs from 'fs'; // 导入fs模块
 
 @Injectable()
 export class FileInterceptorInterceptor implements NestInterceptor {
@@ -71,22 +72,10 @@ export class FileController {
   }
 
   @Get('test')
-  test(@Resp() res: Response) {
+  test(): Res {
     // 在这里根据文件名获取文件路径
     const filePath = join('D:', 'aaa.js');
-
-    // 设置响应头，指定文件的Content-Disposition和Content-Type
-    res.setHeader('Content-Disposition', `attachment; filename=aaa.vue`);
-    res.setHeader('Content-Type', 'application/octet-stream');
-
-    // 将文件发送给前端
-    res.download(filePath, (err) => {
-      if (err) {
-        // 处理错误
-        // 例如，如果文件不存在或无法读取
-        console.error(err);
-      }
-    });
-    return R.ok('111');
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    return R.ok('成功', fileContent);
   }
 }

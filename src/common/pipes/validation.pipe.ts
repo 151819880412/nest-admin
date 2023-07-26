@@ -22,7 +22,9 @@ export class ValidationPipes implements PipeTransform {
       return value;
     }
     // 将对象转换为 Class 来验证
-    const object = plainToClass(metatype, value);
+    const object = plainToClass(metatype, value, {
+      excludeExtraneousValues: true, // 添加此选项来过滤未@Expose()定义的属性
+    });
     const errors = await validate(object);
     if (errors.length > 0) {
       const errorArr = [];
@@ -34,7 +36,7 @@ export class ValidationPipes implements PipeTransform {
       // throw new BadRequestException(`Validation failed: ${msg}`);
       throw new BadRequestException(errorArr);
     }
-    return value;
+    return object;
   }
 
   private toValidate(metatype: any): boolean {

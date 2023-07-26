@@ -1,82 +1,50 @@
-// BaseQueryBuilderService.ts
 import {
   Brackets,
-  DataSource,
   DeleteResult,
   EntityTarget,
+  FindOptionsWhere,
   InsertResult,
   ObjectLiteral,
-  UpdateResult,
+  Repository,
 } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { fuzzyquery } from 'src/utils/Fuzzyquery';
-import { R, Res } from 'src/response/R';
+import { Page, R, Res } from 'src/response/R';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 /**
  * 服务基类,实现一些共有的基本方法,这样就不用每个服务类在写一遍了,直接继承该类即可
  */
 @Injectable()
-export class BaseQueryBuilderService<E> {
-  dataSource?: DataSource;
-  dataSourceStr?: string;
-  entity?: EntityTarget<E>;
-  constructor(
-    dataSource?: DataSource,
-    dataSourceStr?: string,
-    entity?: EntityTarget<E>,
-  ) {
-    this.dataSource = dataSource;
-    this.dataSourceStr = dataSourceStr;
-    this.entity = entity;
-  }
+export class BaseQueryBuilderServiceImpl<T> {
+  constructor(protected readonly repository: Repository<T>) {}
 
   /**
    * 分页查询
-   * @date 2022-08-09
+   * @author
+   * @date 2023-07-12
    * @param {any} currentPage:number
    * @param {any} pageSize:number
-   * @param {any} data:T
-   * @param {any} database:string
-   * @param {any} entity:EntityTarget<E>
+   * @param {any} data:T|{}
+   * @param {any} selectCondition:Array<string>=null
    * @returns {any}
    */
-  async findPage<T>(
+  async findPage<E>(
     currentPage: number,
     pageSize: number,
     // eslint-disable-next-line @typescript-eslint/ban-types
-    data: T | {},
+    data: E | {},
     selectCondition: Array<string> = null,
-  ): Promise<Res<T>> {
-    const result: [ObjectLiteral[], number] = await this.dataSource
-      .getRepository(this.entity)
-      .createQueryBuilder(this.dataSourceStr)
+  ): Promise<Page> {
+    const result: [T[], number] = await this.repository
+      .createQueryBuilder('entity')
       .where(fuzzyquery(data))
-      .orderBy(`${this.dataSourceStr}.createdTime`, 'DESC')
+      .orderBy(`entity.createdTime`, 'DESC')
       .skip(pageSize * (currentPage - 1))
       .take(pageSize)
       .select(selectCondition)
       .getManyAndCount();
-    return R.ok('成功', { total: result[1], results: result[0] });
+    return { total: result[1], results: result[0] };
   }
-
-  // async findOne(condition: object) {
-  //   const data = await this.dataSource
-  //     .getRepository(this.entity)
-  //     .createQueryBuilder(this.dataSourceStr)
-  //     .where(condition)
-  //     .getOne();
-  //   console.log(data);
-  //   return data;
-  // }
-
-  // async findOne(whereStr: string, whereData: object) {
-  //   const data = await this.dataSource
-  //     .getRepository(this.entity)
-  //     .createQueryBuilder(this.dataSourceStr)
-  //     .where(whereStr, whereData)
-  //     .getOne();
-  //   console.log(data);
-  //   return data;
-  // }
 
   /**
    * 查询单个
@@ -92,12 +60,22 @@ export class BaseQueryBuilderService<E> {
       | ObjectLiteral
       | ObjectLiteral[],
     parameters?: ObjectLiteral,
-  ): Promise<E> {
-    const data = await this.dataSource
-      .getRepository(this.entity)
-      .createQueryBuilder(this.dataSourceStr)
+  ): Promise<T> {
+    const data = await this.repository
+
+      .createQueryBuilder('entity')
       .where(where, parameters)
       .getOne();
+    return data;
+  }
+
+  async findOneBy(
+    where: FindOptionsWhere<T> | FindOptionsWhere<T>[],
+  ): Promise<T[]> {
+    const data = await this.repository
+      .createQueryBuilder('entity')
+      .where(where)
+      .getMany();
     return data;
   }
 
@@ -115,10 +93,10 @@ export class BaseQueryBuilderService<E> {
       | ObjectLiteral
       | ObjectLiteral[],
     parameters?: ObjectLiteral,
-  ): Promise<E> {
-    const data = await this.dataSource
-      .getRepository(this.entity)
-      .createQueryBuilder(this.dataSourceStr)
+  ): Promise<T> {
+    const data = await this.repository
+
+      .createQueryBuilder('entity')
       // .leftJoinAndSelect(Article, 'article', 'user.id = article.createBy')
       .where(where, parameters)
       .getOne();
@@ -132,13 +110,12 @@ export class BaseQueryBuilderService<E> {
    * @returns {any}
    */
   async findMany(
-    entity?: EntityTarget<E>,
+    entity?: EntityTarget<T>,
     dataSourceStr?: string,
     where?: object,
   ): Promise<any> {
-    const data = await this.dataSource
-      .getRepository(entity || this.entity)
-      .createQueryBuilder(dataSourceStr || this.dataSourceStr)
+    const data = await this.repository
+      .createQueryBuilder(dataSourceStr || 'entity')
       .where(Object.assign({}, { delFlag: 1 }, where))
       .getMany();
     return data;
@@ -151,10 +128,10 @@ export class BaseQueryBuilderService<E> {
    * @returns {any}
    */
   async saveOne(entity): Promise<InsertResult> {
-    const data = await this.dataSource
-      .createQueryBuilder()
+    const data = await this.repository
+      .createQueryBuilder('entity')
       .insert()
-      .into(this.entity)
+      .into('entity')
       .values(entity)
       .execute();
     return data;
@@ -168,10 +145,10 @@ export class BaseQueryBuilderService<E> {
    */
   async relationSaveOne<T>(
     entity: EntityTarget<T>,
-    obj,
+    obj: QueryDeepPartialEntity<T>,
   ): Promise<InsertResult> {
-    const data = await this.dataSource
-      .createQueryBuilder()
+    const data = await this.repository
+      .createQueryBuilder('entity')
       .insert()
       .into(entity)
       .values(obj)
@@ -195,8 +172,8 @@ export class BaseQueryBuilderService<E> {
       | ObjectLiteral[],
     parameters?: ObjectLiteral,
   ): Promise<DeleteResult> {
-    const data = this.dataSource
-      .createQueryBuilder()
+    const data = this.repository
+      .createQueryBuilder('entity')
       .delete()
       .from(entity)
       .where(where, parameters)
@@ -221,9 +198,9 @@ export class BaseQueryBuilderService<E> {
       | ObjectLiteral[],
     parameters?: ObjectLiteral,
   ): Promise<Res<T>> {
-    const data = await this.dataSource
-      .createQueryBuilder()
-      .update(this.entity)
+    const data = await this.repository
+      .createQueryBuilder('entity')
+      .update()
       .set(values)
       .where(where, parameters)
       .returning('*')
@@ -247,9 +224,9 @@ export class BaseQueryBuilderService<E> {
   //     | ObjectLiteral[],
   //   parameters?: ObjectLiteral,
   // ): Promise<UpdateResult> {
-  //   const data = this.dataSource
-  //     .createQueryBuilder()
-  //     .update(this.entity)
+  //   const data = this.repository
+  //     .createQueryBuilder('entity')
+  //     .update('entity')
   //     .set(values)
   //     .where(where, parameters)
   //     .execute();
@@ -271,10 +248,10 @@ export class BaseQueryBuilderService<E> {
       | ObjectLiteral[],
     parameters?: ObjectLiteral,
   ): Promise<DeleteResult> {
-    const data = this.dataSource
-      .createQueryBuilder()
+    const data = this.repository
+      .createQueryBuilder('entity')
       .delete()
-      .from(this.entity)
+      .from('entity')
       .where(where, parameters)
       .execute();
     return data;

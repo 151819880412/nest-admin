@@ -12,11 +12,17 @@ import { JwtAuthGuard } from './common/guards/auth.guard';
 import { FileModule } from './module/file.module';
 import appConfig from './config/app.config';
 import { AuthModule } from './module/auth.module';
+import { RoleModule } from './module/role.module';
+import { MenuModule } from './module/menu.module';
 
 @Module({
   imports: [
     // 用户
     UserModule,
+    // 角色
+    RoleModule,
+    // 菜单
+    MenuModule,
     // 登陆
     LoginModule,
     // 文件

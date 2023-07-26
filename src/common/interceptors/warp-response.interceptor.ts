@@ -7,6 +7,7 @@ import {
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { R, Res } from 'src/response/R';
+import { Reflector } from '@nestjs/core';
 interface ResponseInterFace<T> {
   data: T;
 }
@@ -44,16 +45,35 @@ export class WarpResponseInterceptor<T extends ResponseInterFace<T>>
   }
 }
 
-// @Injectable()
-// export class PostInterceptor implements NestInterceptor {
-//   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-//     const request = context.switchToHttp().getRequest<Request>();
-//     const response = context.switchToHttp().getResponse<Response>();
-
-//     if (request.method === 'POST') {
-//        if (response.status === 201)
-//           context.switchToHttp().getResponse().status(HttpStatus.OK);
-//     }
-//     return next.handle();
-//   }
-// }
+/**
+ * 统一处理返回接口结果，如果不需要则添加@Keep装饰器
+ */
+export class ApiTransformInterceptor implements NestInterceptor {
+  constructor(private readonly reflector: Reflector) {}
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler<any>,
+  ): Observable<any> {
+    return next.handle().pipe(
+      map((data) => {
+        const keep = this.reflector.get<boolean>(
+          'common:transform_keep',
+          context.getHandler(),
+        );
+        if (keep) {
+          if (data.constructor == Res) {
+            return data.data;
+          }
+          return data;
+        } else {
+          const response = context.switchToHttp().getResponse();
+          response.header('Content-Type', 'application/json; charset=utf-8');
+          if (data.constructor == Res) {
+            return data;
+          }
+          return R.ok('请求成功', data);
+        }
+      }),
+    );
+  }
+}

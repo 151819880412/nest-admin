@@ -6,7 +6,7 @@ export function fuzzyquery<T>(obj: T) {
   Object.keys(obj).forEach((item) => {
     if (typeof obj[item] == 'number') {
       data[item] = obj[item];
-    } else {
+    } else if (obj[item]) {
       data[item] = ILike(`%${obj[item]}%`);
     }
   });

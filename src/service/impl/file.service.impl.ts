@@ -8,11 +8,11 @@ import * as multer from 'multer';
 import { Formt } from 'src/utils/DateFormt';
 import { FileEntity } from 'src/pojo/entity/file.entity';
 import { R, Res } from 'src/response/R';
-import { BaseService } from '../Base.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MulterFile } from 'multer';
 import { ASTElement } from 'vue-template-compiler';
 import { SFCDescriptor } from '@vue/compiler-sfc';
+import { BaseServiceImpl } from './Base.service.impl';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs'); // 文件系统模块，用于读写文件
@@ -27,7 +27,7 @@ const { build } = require('esbuild'); // JavaScript打包工具
 
 @Injectable()
 export class FileService
-  extends BaseService<FileEntity>
+  extends BaseServiceImpl<FileEntity>
   implements MulterOptionsFactory
 {
   constructor(
