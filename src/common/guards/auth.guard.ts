@@ -29,7 +29,6 @@ export class JwtAuthGuard implements CanActivate {
     const token: string = request['headers']?.authorization?.substring(
       'Bearer '.length,
     ) as string;
-
     if (token) {
       try {
         // 获取 redis 里缓存的 token

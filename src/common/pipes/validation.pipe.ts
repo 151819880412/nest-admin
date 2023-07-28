@@ -17,14 +17,17 @@ import { plainToClass } from 'class-transformer';
 @Injectable()
 export class ValidationPipes implements PipeTransform {
   async transform(value: any, { metatype }: ArgumentMetadata) {
+    // console.log(metatype, metatype.name, this.toValidate(metatype), value);
     if (!metatype || !this.toValidate(metatype)) {
       // 如果没有传入验证规则，则不验证，直接返回数据
       return value;
     }
+
     // 将对象转换为 Class 来验证
     const object = plainToClass(metatype, value, {
       excludeExtraneousValues: true, // 添加此选项来过滤未@Expose()定义的属性
     });
+    // console.log(object, JSON.parse(JSON.stringify(object)));
     const errors = await validate(object);
     if (errors.length > 0) {
       const errorArr = [];

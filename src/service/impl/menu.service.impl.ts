@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, TreeRepository } from 'typeorm';
 import { MenuEntity } from 'src/pojo/entity/menu.entity';
 import { BaseServiceImpl } from './Base.service.impl';
 import { MenuService } from '../menu.service';
+import { MenuDto } from 'src/pojo/dto/menu.dto';
 
 @Injectable()
 export class MenuServiceImpl
@@ -13,6 +14,8 @@ export class MenuServiceImpl
   constructor(
     @InjectRepository(MenuEntity)
     private readonly menuRepository: Repository<MenuEntity>,
+    @InjectRepository(MenuEntity)
+    private readonly menuTreeRepository: TreeRepository<MenuEntity>,
   ) {
     super(menuRepository);
   }
@@ -26,6 +29,31 @@ export class MenuServiceImpl
         id: In(ids),
       },
     });
+    return data;
+  }
+
+  async queryById(id: string): Promise<MenuEntity> {
+    const parent: MenuEntity = await this.findOne({
+      where: {
+        id,
+      },
+    });
+    const data: MenuEntity = await this.menuTreeRepository.findDescendantsTree(
+      parent,
+    );
+    return data;
+  }
+
+  async add(menu: MenuDto): Promise<MenuEntity> {
+    if (menu.parentId) {
+      const parentMenu = await this.menuRepository.findOne({
+        where: {
+          id: menu.parentId,
+        },
+      });
+      menu['parent'] = parentMenu;
+    }
+    const data = await this.menuRepository.save(menu);
     return data;
   }
 }

@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { RoleEntity } from 'src/pojo/entity/role.entity';
 import { RoleServiceImpl } from './role.service.impl';
 import { BaseServiceImpl } from './Base.service.impl';
+import { MenuEntity } from 'src/pojo/entity/menu.entity';
 
 @Injectable()
 export class UserServiceImpl
@@ -44,17 +45,81 @@ export class UserServiceImpl
   }
 
   async queryById(id: string): Promise<UserEntity> {
+    // 查询用户下所有的角色和菜单(一维)
     const data: UserEntity = await this.findOne({
       where: { id },
       relations: ['roles', 'roles.menus'],
     });
-    // 提取roles中的menus字段，放入单独的数组中
-    const menusArray = data.roles.map((role) => role.menus);
-    data['menus'] = menusArray;
 
-    // 将roles中的menus属性设置为null，确保它不再在roles对象上体现
-    data.roles.forEach((role) => {
-      role.menus = null;
+    // 查询用户所有的角色和菜单(树形结构)
+    // const user = await this.userRepository
+    //   .createQueryBuilder('user')
+    //   .leftJoinAndSelect('user.roles', 'role')
+    //   .leftJoinAndSelect('role.menus', 'menu', 'menu.parentId IS NULL') // 加载直接子菜单，menu.parentId IS NULL表示只加载顶层菜单
+    //   .leftJoinAndMapMany(
+    //     'menu.children',
+    //     'menu.children',
+    //     'child_menu',
+    //     'child_menu.parentId = menu.id',
+    //   )
+    //   .leftJoinAndMapMany(
+    //     'child_menu.children',
+    //     'child_menu.children',
+    //     'grandchild_menu',
+    //     'grandchild_menu.parentId = child_menu.id',
+    //   )
+    //   .where('user.id = :id', { id })
+    //   .orderBy('menu.sort', 'ASC') // 根据 menu 的 sort 字段降序排列
+    //   .addOrderBy('child_menu.sort', 'ASC') // 根据 children 的 sort 字段降序排列
+    //   .addOrderBy('grandchild_menu.sort', 'ASC') // 根据 grandchildren 的 sort 字段降序排列（如果有的话）
+    //   .getOne();
+    // console.log(user);
+
+    function generateTree(data: MenuEntity[]) {
+      const map = {};
+      const tree: MenuEntity[] = [];
+
+      // 首先，将每个节点的id作为键，存储在一个对象中，方便后续通过id查找节点
+      data.forEach((item: MenuEntity) => {
+        map[item.id] = {
+          ...item,
+          children: null,
+        };
+      });
+
+      // 遍历数据，将每个节点添加到其对应的父节点的children数组中
+      data.forEach((item: MenuEntity) => {
+        if (item.parentId !== null) {
+          if (map[item.parentId].children == null) {
+            map[item.parentId].children = [];
+          }
+          map[item.parentId].children.push(map[item.id]);
+        } else {
+          // 如果parentId为null，则表示该节点是最上级节点，将其添加到树的数组中
+          tree.push(map[item.id]);
+        }
+      });
+
+      return tree;
+    }
+
+    const list: MenuEntity[] = [];
+    data.roles.forEach((item: RoleEntity) => {
+      item.menus.forEach((item2: MenuEntity) => {
+        if (
+          list.filter((item3: MenuEntity) => item2.id == item3.id).length == 0
+        ) {
+          list.push(item2);
+        }
+      });
+    });
+
+    const tree = generateTree(list);
+    data['menu'] = tree;
+
+    // 将roles中的menus属性设置为undefined，确保它不再在roles对象上体现
+    data.roles.forEach((item: RoleEntity) => {
+      item.menus = undefined;
     });
 
     return data;

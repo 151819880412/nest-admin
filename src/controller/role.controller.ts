@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -37,6 +37,11 @@ export class RoleController {
     @Param('pageSize') pageSize: number,
   ): Promise<Page> {
     return this.roleService.page(currentPage, pageSize, rolePageDto);
+  }
+
+  @Get('queryById/:id')
+  queryById(@Param('id') id: string): Promise<RoleEntity> {
+    return this.roleService.queryById(id);
   }
 
   @Post('queryByIds')

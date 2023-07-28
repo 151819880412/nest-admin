@@ -43,6 +43,17 @@ export class RoleServiceImpl
     return data;
   }
 
+  async queryById(id: string): Promise<RoleEntity> {
+    const data: RoleEntity = await this.findOne({
+      where: {
+        id,
+      },
+      relations: ['menus'], // 加载菜单及其子菜单
+    });
+
+    return data;
+  }
+
   async add(role: RoleDto): Promise<RoleEntity> {
     const menus = await this.menuServiceImpl.queryByIds(role.menus);
 
